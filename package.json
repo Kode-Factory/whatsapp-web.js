@@ -1,6 +1,6 @@
 {
   "name": "@kode-factory/whatsapp-web.js",
-  "version": "20.03.2024-1240",
+  "version": "1.23.1-alpha.5",
   "description": "Library for interacting with the WhatsApp Web API ",
   "main": "./index.js",
   "typings": "./index.d.ts",
