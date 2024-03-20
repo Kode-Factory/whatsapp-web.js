@@ -1,0 +1,57 @@
+name: Deploy to Production
+on:
+  push:
+    branches:
+      - kode
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          fetch-depth: 0
+
+      - name: Fetching version and package name
+        run: | 
+          echo "APP_NAME=$(jq .name package.json -r)" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$(jq .version package.json -r).$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_ENV
+
+      - name: Checking version
+        run: echo "$APP_NAME:$IMAGE_TAG"
+
+      - name: Send telegram notification
+        run: |
+          curl --location 'https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage' \
+          --header 'Content-Type: application/json' \
+          --data '{
+              "chat_id": ${{ secrets.TELEGRAM_CHAT_ID }},
+              "parse_mode": "HTML",
+                "text": "<b>Deploy</b>\nStarting build of package <b>${{ env.APP_NAME }}</b> with tag <b>${{ env.IMAGE_TAG }}</b>."
+              }'
+
+      - name: Prepare .npmrc
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=$NPM_TOKEN" >> .npmrc
+          echo "@kode-factory:registry=https://npm.pkg.github.com/" >> .npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN}}
+
+      - name: Install dependencies and publish
+        run: |
+            echo "Generating new version of package $APP_NAME with tag $IMAGE_TAG"
+            yarn install
+            yarn publish --new-version $IMAGE_TAG --no-git-tag-version
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+
+      - name: Send telegram notification
+        run: |
+          curl --location 'https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage' \
+          --header 'Content-Type: application/json' \
+          --data '{
+              "chat_id": ${{ secrets.TELEGRAM_CHAT_ID }},
+              "parse_mode": "HTML",
+                "text": "<b>Deploy</b>\nDeployed new version of package <b>${{ env.APP_NAME }}</b> with tag <b>${{ env.IMAGE_TAG }}</b>."
+              }'
