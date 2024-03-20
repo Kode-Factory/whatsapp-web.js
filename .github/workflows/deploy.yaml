@@ -16,7 +16,7 @@ jobs:
       - name: Fetching version and package name
         run: | 
           echo "APP_NAME=$(jq .name package.json -r)" >> $GITHUB_ENV
-          echo "IMAGE_TAG=$(jq .version package.json -r).$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_ENV
+          echo "IMAGE_TAG=$(jq .version package.json -r).$(date +"%-Y.%-m.%-d.%-H%-M")" >> $GITHUB_ENV
 
       - name: Checking version
         run: echo "$APP_NAME:$IMAGE_TAG"
