@@ -259,7 +259,10 @@ class Client extends EventEmitter {
                         // Listens to retry button, when found, click it
                         else if (mut.type === 'childList') {
                             const retry_button = document.querySelector(selectors.QR_RETRY_BUTTON);
-                            if (retry_button) retry_button.click();
+                            if (retry_button) return retry_button.click();
+
+                            const qr_container = document.querySelector(selectors.QR_CONTAINER);
+                            if (qr_container) return window.qrChanged(qr_container.dataset.ref);
                         }
                     });
                 });
